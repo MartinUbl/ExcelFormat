@@ -97,12 +97,17 @@
 
 //MF type definitions of the Windows Compound Binary File Format (CBF) Specification
 
+#ifndef BYTE_DEFINED
 typedef unsigned char	BYTE;	//  8 bit unsigned integer
+#endif
 
+#ifndef INT16_TYPES_DEFINED
 typedef unsigned short	WORD;	// 16 bit unsigned integer
 typedef short			SHORT;	// 16 bit signed integer
 typedef unsigned short	USHORT;	// 16 bit unsigned integer
+#endif
 
+#ifndef INT32_TYPES_DEFINED
 #ifdef _MSC_VER
 typedef unsigned long	DWORD;	// 32 bit unsigned integer
 typedef long			LONG;	// 32 bit signed integer
@@ -111,6 +116,7 @@ typedef unsigned long	ULONG;	// 32 bit unsigned integer
 typedef unsigned int	DWORD;	// 32 bit unsigned integer
 typedef int				LONG;	// 32 bit signed integer
 typedef unsigned int	ULONG;	// 32 bit unsigned integer
+#endif
 #endif
 
 typedef short	OFFSET;
