@@ -550,7 +550,7 @@ struct LittleEndian
 			bytes = SIZEOFWCHAR_T;
 
 		for (int i=0; i<bytes; ++i) {
-			if (pos+i < (int)buffer.size()) //MF
+			if (static_cast<size_t>(pos+i) < buffer.size()) //MF
 				retVal |= ((wchar_t)((unsigned char)buffer[pos+i])) << 8*i;
 		}
 	}
