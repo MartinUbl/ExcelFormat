@@ -233,14 +233,14 @@ bool Block::Create(const wchar_t* filename)
 	name[filenameLength] = 0;
 
 	// Open the file while truncating any existing file
-	bool ret = this->Open(filename, ios_base::in | ios_base::out | ios_base::trunc);
+	bool ret = this->Open(filename, std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
 	delete[] name;
 
 	return ret;
 }
 
-bool Block::Open(const wchar_t* filename, ios_base::openmode mode)
+bool Block::Open(const wchar_t* filename, std::ios_base::openmode mode)
 // PURPOSE: Open an existing block file.
 // PROMISE: Return true if file is successfully opened, false if otherwise.
 {
@@ -250,9 +250,9 @@ bool Block::Open(const wchar_t* filename, ios_base::openmode mode)
 	wcstombs(&*(filename_.begin()), filename, filenameLength);
 
 #if _MSC_VER>=1400	// VS 2005
-	file_.open(&*(filename_.begin()), mode | ios_base::binary, _SH_DENYRW);
+	file_.open(&*(filename_.begin()), mode | std::ios_base::binary, _SH_DENYRW);
 #else
-	file_.open(&*(filename_.begin()), mode | ios_base::binary);
+	file_.open(&*(filename_.begin()), mode | std::ios_base::binary);
 #endif
 
 	if (!file_.is_open())
@@ -261,11 +261,11 @@ bool Block::Open(const wchar_t* filename, ios_base::openmode mode)
 	mode_ = mode;
 
 	// Calculate filesize
-	if (mode & ios_base::in) {
-		file_.seekg(0, ios_base::end);
+	if (mode & std::ios_base::in) {
+		file_.seekg(0, std::ios_base::end);
 		fileSize_ = (ULONG) file_.tellg();
-	} else if (mode & ios_base::out) {
-		file_.seekp(0, ios_base::end);
+	} else if (mode & std::ios_base::out) {
+		file_.seekp(0, std::ios_base::end);
 		fileSize_ = (ULONG) file_.tellp();
 	} else {
 		this->Close();
@@ -303,7 +303,7 @@ bool Block::Read(SECT index, char* block)
 // EXPLAIN: index is from [0..].
 // PROMISE: Return true if data are successfully read, false if otherwise.
 {
-	if (!(mode_ & ios_base::in))
+	if (!(mode_ & std::ios_base::in))
 		return false;
 
 	if (index < indexEnd_) {
@@ -319,7 +319,7 @@ bool Block::Write(SECT index, const char* block)
 // EXPLAIN: index is from [0..].
 // PROMISE: Return true if data are successfully written, false if otherwise.
 {
-	if (!(mode_ & ios_base::out))
+	if (!(mode_ & std::ios_base::out))
 		return false;
 
 	file_.seekp(index * blockSize_);
@@ -342,7 +342,7 @@ bool Block::Swap(SECT index1, SECT index2)
 // EXPLAIN: index1 and index2 are from [0..].
 // PROMISE: Return true if data are successfully swapped, false if otherwise.
 {
-	if (!(mode_ & ios_base::out))
+	if (!(mode_ & std::ios_base::out))
 		return false;
 
 	if (index1 < indexEnd_ && index2 < indexEnd_) {
@@ -375,7 +375,7 @@ bool Block::Move(SECT from, SECT to)
 // EXPLAIN: from and to are from [0..].
 // PROMISE: Return true if data are successfully moved, false if otherwise.
 {
-	if (!(mode_ & ios_base::out))
+	if (!(mode_ & std::ios_base::out))
 		return false;
 
 	if (from<indexEnd_ && to<indexEnd_) {
@@ -401,7 +401,7 @@ bool Block::Insert(SECT index, const char* block)
 // EXPLAIN: index is from [0..].
 // PROMISE: Return true if data are successfully inserted, false if otherwise.
 {
-	if (!(mode_ & ios_base::out))
+	if (!(mode_ & std::ios_base::out))
 		return false;
 
 	if (index <= indexEnd_) {
@@ -425,7 +425,7 @@ bool Block::Erase(SECT index)
 // EXPLAIN: index is from [0..].
 // PROMISE: Return true if data are successfully erased, false if otherwise.
 {
-	if (!(mode_ & ios_base::out))
+	if (!(mode_ & std::ios_base::out))
 		return false;
 
 	if (index < indexEnd_) {
@@ -443,13 +443,13 @@ bool Block::Erase(SECT index)
 		}
 // Close / Clear / Open may lead to bugs when another process accesss the file (ie.: Anti-Virus)
 //		file_.close();
-//		file_.open(&*(filename_.begin()), ios_base::out | ios_base::trunc | ios_base::binary);
+//		file_.open(&*(filename_.begin()), std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 		file_.write(buffer, fileSize_); // Write the new file.
 
 		// flush the file immediatelly
 		file_.flush();
 //		file_.close();
-//		file_.open(&*(filename_.begin()), mode_ | ios_base::binary);
+//		file_.open(&*(filename_.begin()), mode_ | std::ios_base::binary);
 
 		delete[] buffer;
 		return true;
@@ -457,12 +457,12 @@ bool Block::Erase(SECT index)
 		return false;
 }
 
-bool Block::Erase(vector<SECT>& indices)
+bool Block::Erase(std::vector<SECT>& indices)
 // PURPOSE: Erase blocks of data in the opened file at the index positions.
 // EXPLAIN: Each index in indices is from [0..].
 // PROMISE: Return true if data are successfully erased, false if otherwise.
 {
-	if (!(mode_ & ios_base::out))
+	if (!(mode_ & std::ios_base::out))
 		return false;
 
 	// Read entire file except the blocks to be deleted into memory.
@@ -520,7 +520,7 @@ CompoundFile::Header::Header()
 	_csectDif = 0;
 
 	_sectFat[0] = 0;	// Initial BAT indices at block 0 (=block 1 in Block)
-	fill(_sectFat+1, _sectFat+109, FREESECT);	// Rest of the BATArray is empty
+	std::fill(_sectFat+1, _sectFat+109, FREESECT);	// Rest of the BATArray is empty
 
 	Initialize();
 }
@@ -596,7 +596,7 @@ void CompoundFile::Header::Initialize()
 // PURPOSE: Read and write data to a compound file property.
 CompoundFile::DirectoryEntry::DirectoryEntry()
 {
-	fill(name_, name_+32, 0);
+	std::fill(name_, name_+32, 0);
 	_cb_namesize = 0;
 	_mse = STGTY_STORAGE;
 	_bflags = DE_BLACK;
@@ -722,7 +722,7 @@ bool CompoundFile::Create(const wchar_t* filename)
 	return true;
 }
 
-bool CompoundFile::Open(const wchar_t* filename, ios_base::openmode mode)
+bool CompoundFile::Open(const wchar_t* filename, std::ios_base::openmode mode)
 // PURPOSE: Open an existing compound file.
 // PROMISE: Return true if file is successfully opened, false if otherwise.
 {
@@ -830,7 +830,7 @@ int CompoundFile::ChangeDirectory(const wchar_t* path)
 		}
 
 		wchar_t* directory = new wchar_t[npos-ipos+1];
-		copy(path+ipos, path+npos, directory);
+		std::copy(path+ipos, path+npos, directory);
 		directory[npos-ipos] = 0;
 		currentDirectory_ = FindProperty(currentDirectory_, directory);
 		delete[] directory;
@@ -918,7 +918,7 @@ int CompoundFile::ReadFile(const wchar_t* path, char* data)
 	{
 		buffer = new char[DataSize(propertyTrees_->self_->_sectStart, true)];
 		ReadData(propertyTrees_->self_->_sectStart, buffer, true);
-		copy(buffer, buffer+propertyTrees_->self_->_ulSize, data);
+		std::copy(buffer, buffer+propertyTrees_->self_->_ulSize, data);
 		delete[] buffer;
 		return SUCCESS;
 	}
@@ -941,12 +941,12 @@ int CompoundFile::ReadFile(const wchar_t* path, char* data)
 		ReadData(property->self_->_sectStart, buffer, false);
 	}
 	// Truncated the retrieved data to the actual file size.
-	copy(buffer, buffer+property->self_->_ulSize, data);
+	std::copy(buffer, buffer+property->self_->_ulSize, data);
 	delete[] buffer;
 	return SUCCESS;
 }
 
-int CompoundFile::ReadFile(const wchar_t* path, vector<char>& data)
+int CompoundFile::ReadFile(const wchar_t* path, std::vector<char>& data)
 // PURPOSE: Read a file's data in the compound file.
 // PROMISE: Returns the small blocks of data stored by the Root Entry if path = "\".
 // PROMISE: data will not be set if file is not present in the compound file.
@@ -996,7 +996,7 @@ int CompoundFile::WriteFile(const wchar_t* path, const char* data, ULONG size)
 	return SUCCESS;
 }
 
-int CompoundFile::WriteFile(const wchar_t* path, const vector<char>& data, ULONG size)
+int CompoundFile::WriteFile(const wchar_t* path, const std::vector<char>& data, ULONG size)
 // PURPOSE: Write data to a file in the compound file.
 // PROMISE: The file's original data will be replaced by the new data.
 {
@@ -1015,7 +1015,7 @@ bool CompoundFile::Create(const char* filename)
 	return ret;
 }
 
-bool CompoundFile::Open(const char* filename, ios_base::openmode mode)
+bool CompoundFile::Open(const char* filename, std::ios_base::openmode mode)
 {
 	size_t filenameLength = strlen(filename);
 	wchar_t* wname = new wchar_t[filenameLength+1];
@@ -1081,7 +1081,7 @@ int CompoundFile::ReadFile(const char* path, char* data)
 	delete[] wpath;
 	return ret;
 }
-int CompoundFile::ReadFile(const char* path, vector<char>& data)
+int CompoundFile::ReadFile(const char* path, std::vector<char>& data)
 {
 	size_t pathLength = strlen(path);
 	wchar_t* wpath = new wchar_t[pathLength+1];
@@ -1105,7 +1105,7 @@ int CompoundFile::WriteFile(const char* path, const char* data, ULONG size)
 	delete[] wpath;
 	return ret;
 }
-int CompoundFile::WriteFile(const char* path, const vector<char>& data, ULONG size)
+int CompoundFile::WriteFile(const char* path, const std::vector<char>& data, ULONG size)
 {
 	size_t pathLength = strlen(path);
 	wchar_t* wpath = new wchar_t[pathLength+1];
@@ -1119,7 +1119,7 @@ int CompoundFile::WriteFile(const char* path, const vector<char>& data, ULONG si
 }
 
 /*********************** Inaccessible General Functions ***************************/
-void CompoundFile::IncreaseLocationReferences(vector<SECT> indices)
+void CompoundFile::IncreaseLocationReferences(std::vector<SECT> indices)
 // PURPOSE: Increase block location references in header, BAT indices and properties,
 // PURPOSE: which will be affected by the insertion of new indices contained in indices.
 // PROMISE: Block location references which are smaller than all the new indices
@@ -1215,7 +1215,7 @@ void CompoundFile::IncreaseLocationReferences(vector<SECT> indices)
 	}}
 }
 
-void CompoundFile::DecreaseLocationReferences(vector<SECT> indices)
+void CompoundFile::DecreaseLocationReferences(std::vector<SECT> indices)
 // PURPOSE: Decrease block location references in header, BAT indices and properties,
 // PURPOSE: which will be affected by the deletion of indices contained in indices.
 // PROMISE: BAT indices pointing to a deleted index will be redirected to point to
@@ -1281,7 +1281,7 @@ void CompoundFile::DecreaseLocationReferences(vector<SECT> indices)
 		} while(!end);
 	}}
 	// Erase indices to be deleted from the block indices
-	sort (indices.begin(), indices.end(), greater<size_t>());
+	sort (indices.begin(), indices.end(), std::greater<size_t>());
 	{for(size_t i=0; i<maxIndices; ++i)
 	{
 		blocksIndices_.erase(blocksIndices_.begin()+indices[i]);
@@ -1357,7 +1357,7 @@ void CompoundFile::SplitPath(const wchar_t* path,
 	if (npos != 0) {
 		// Get parent path if available
 		parentpath = new wchar_t[npos+1];
-		copy(path, path+npos, parentpath);
+		std::copy(path, path+npos, parentpath);
 		parentpath[npos] = 0;
 		++npos;
 	}
@@ -1367,7 +1367,7 @@ void CompoundFile::SplitPath(const wchar_t* path,
 		++npos;
 
 	propertyname = new wchar_t[pathLength-npos+1];
-	copy(path+npos, path+pathLength, propertyname);
+	std::copy(path+npos, path+pathLength, propertyname);
 	propertyname[pathLength-npos] = 0;
 }
 
@@ -1460,7 +1460,7 @@ ULONG CompoundFile::DataSize(SECT startIndex, bool isBig)
 // PROMISE: Returns the total size occupied by the property which is the total
 // PROMISE: number of blocks occupied multiply by the block size.
 {
-	vector<SECT> indices;
+	std::vector<SECT> indices;
 
 	if (isBig) {
 		GetBlockIndices(startIndex, indices, true);
@@ -1479,7 +1479,7 @@ ULONG CompoundFile::ReadData(SECT startIndex, char* data, bool isBig)
 // PROMISE: Returns the total size occupied by the property which is the total
 // PROMISE: number of blocks occupied multiply by the block size.
 {
-	vector<SECT> indices;
+	std::vector<SECT> indices;
 
 	if (isBig) {
 		GetBlockIndices(startIndex, indices, true);
@@ -1491,8 +1491,8 @@ ULONG CompoundFile::ReadData(SECT startIndex, char* data, bool isBig)
 		return maxIndices*header_.bigBlockSize_;
 	} else {
 		GetBlockIndices(startIndex, indices, false);
-		size_t minIndex = *min_element(indices.begin(), indices.end());
-//		size_t maxIndex = *max_element(indices.begin(), indices.end());
+		size_t minIndex = *std::min_element(indices.begin(), indices.end());
+//		size_t maxIndex = *std::max_element(indices.begin(), indices.end());
 		size_t smallBlocksPerBigBlock = header_.bigBlockSize_ / header_.smallBlockSize_;
 		size_t minBlock = minIndex / smallBlocksPerBigBlock;
 //		size_t maxBlock = maxIndex / smallBlocksPerBigBlock +
@@ -1504,7 +1504,7 @@ ULONG CompoundFile::ReadData(SECT startIndex, char* data, bool isBig)
 		ULONG maxIndices = (ULONG) indices.size();
 		for(size_t i=0; i<maxIndices; ++i) {
 			size_t start = (indices[i] - minBlock*smallBlocksPerBigBlock)*header_.smallBlockSize_;
-			copy(buffer+start,
+			std::copy(buffer+start,
 				  buffer+start+header_.smallBlockSize_,
 				  data+i*header_.smallBlockSize_);
 		}
@@ -1526,7 +1526,7 @@ SECT CompoundFile::WriteData(const char* data, ULONG size, SECT startIndex, bool
 			return startIndex;
 
 		// Get present indices
-		vector<SECT> indices;
+		std::vector<SECT> indices;
 		GetBlockIndices(startIndex, indices, true);
 		ULONG maxPresentBlocks = (ULONG) indices.size();
 
@@ -1544,8 +1544,8 @@ SECT CompoundFile::WriteData(const char* data, ULONG size, SECT startIndex, bool
 				startIndex = ENDOFCHAIN;
 
 			// Get indices of blocks to delete
-			vector<SECT> indicesToRemove(extraBlocks);
-			copy(indices.begin()+maxNewBlocks, indices.end(), indicesToRemove.begin());
+			std::vector<SECT> indicesToRemove(extraBlocks);
+			std::copy(indices.begin()+maxNewBlocks, indices.end(), indicesToRemove.begin());
 			indices.erase(indices.begin()+maxNewBlocks, indices.end());
 
 			// Remove extra blocks and readjust indices
@@ -1601,8 +1601,8 @@ SECT CompoundFile::WriteData(const char* data, ULONG size, SECT startIndex, bool
 				newIndex = indices[curIndex];
 
 			// Write extra block after increasing its size to the minimum block size
-			vector<char> tempdata(header_.bigBlockSize_, 0);
-			copy(data+curIndex*header_.bigBlockSize_, data+curIndex*header_.bigBlockSize_+extraSize, tempdata.begin());
+			std::vector<char> tempdata(header_.bigBlockSize_, 0);
+			std::copy(data+curIndex*header_.bigBlockSize_, data+curIndex*header_.bigBlockSize_+extraSize, tempdata.begin());
 			file_.Write(newIndex+1, &*(tempdata.begin()));
 		}
 		return startIndex;
@@ -1616,13 +1616,13 @@ SECT CompoundFile::WriteData(const char* data, ULONG size, SECT startIndex, bool
 			SECT newIndex = GetFreeBlockIndex(true);
 			fill (block_.begin(), block_.end(), 0);
 			file_.Insert(newIndex, &*(block_.begin()));
-			IncreaseLocationReferences(vector<SECT>(1, newIndex));
+			IncreaseLocationReferences(std::vector<SECT>(1, newIndex));
 			dirEntries_[0]->_sectStart = newIndex;
 			dirEntries_[0]->_ulSize = header_.bigBlockSize_;
 		}
 
 		// Get present indices
-		vector<SECT> indices;
+		std::vector<SECT> indices;
 		GetBlockIndices(startIndex, indices, false);
 		ULONG maxPresentBlocks = (ULONG) indices.size();
 
@@ -1630,7 +1630,7 @@ SECT CompoundFile::WriteData(const char* data, ULONG size, SECT startIndex, bool
 		ULONG extraSize = size % header_.smallBlockSize_;
 		ULONG maxNewBlocks = size / header_.smallBlockSize_ + (extraSize ? 1 : 0);
 
-		vector<char> smallBlocksData;
+		std::vector<char> smallBlocksData;
 		int extraBlocks = maxPresentBlocks - maxNewBlocks;
 		if (extraBlocks > 0) {
 			// Readjust indices and remove blocks
@@ -1641,7 +1641,7 @@ SECT CompoundFile::WriteData(const char* data, ULONG size, SECT startIndex, bool
 				startIndex = ENDOFCHAIN;
 
 			// Get indices of blocks to delete
-			vector<SECT> indicesToRemove(extraBlocks);
+			std::vector<SECT> indicesToRemove(extraBlocks);
 			copy(indices.begin()+maxNewBlocks, indices.end(), indicesToRemove.begin());
 			indices.erase(indices.begin()+maxNewBlocks, indices.end());
 
@@ -1703,7 +1703,7 @@ SECT CompoundFile::WriteData(const char* data, ULONG size, SECT startIndex, bool
 	}
 }
 
-void CompoundFile::GetBlockIndices(SECT startIndex, vector<SECT>& indices, bool isBig)
+void CompoundFile::GetBlockIndices(SECT startIndex, std::vector<SECT>& indices, bool isBig)
 // PURPOSE: Get the indices of blocks where data are stored, starting from startIndex.
 // EXPLAIN: isBig is true if property uses big blocks, false if it uses small blocks.
 {
@@ -1765,13 +1765,13 @@ void CompoundFile::ExpandBATArray(bool isBig)
 	fill(block_.begin(), block_.end(), -1);
 
 	if (isBig) {
-		size_t BATindex = distance(&header_._sectFat[0],
-								   find(header_._sectFat, header_._sectFat+109, -1));
+		size_t BATindex = std::distance(&header_._sectFat[0],
+			std::find(header_._sectFat, header_._sectFat+109, -1));
 		if (BATindex < 109) {
 			// Set new BAT index location
 			newIndex = (SECT) blocksIndices_.size(); // New index location
 			file_.Insert(newIndex+1, &*(block_.begin()));
-			IncreaseLocationReferences(vector<SECT>(1, newIndex));
+			IncreaseLocationReferences(std::vector<SECT>(1, newIndex));
 
 			// Update BAT array
 			header_._sectFat[BATindex] = newIndex;
@@ -1782,11 +1782,11 @@ void CompoundFile::ExpandBATArray(bool isBig)
 			if (header_._csectDif != 0) {
 				newIndex = header_._sectDifStart + header_._csectDif;
 				file_.Insert(newIndex, &*(block_.begin()));
-				IncreaseLocationReferences(vector<SECT>(1, newIndex));
+				IncreaseLocationReferences(std::vector<SECT>(1, newIndex));
 			} else {
 				newIndex = (SECT) blocksIndices_.size();
 				file_.Insert(newIndex, &*(block_.begin()));
-				IncreaseLocationReferences(vector<SECT>(1, newIndex));
+				IncreaseLocationReferences(std::vector<SECT>(1, newIndex));
 				header_._sectDifStart = newIndex;
 			}
 
@@ -1802,13 +1802,13 @@ void CompoundFile::ExpandBATArray(bool isBig)
 		{
 			newIndex = header_._sectMiniFatStart + header_._csectMiniFat;
 			file_.Insert(newIndex, &*(block_.begin()));
-			IncreaseLocationReferences(vector<SECT>(1, newIndex));
+			IncreaseLocationReferences(std::vector<SECT>(1, newIndex));
 		}
 		else
 		{
 			newIndex = GetFreeBlockIndex(true);
 			file_.Insert(newIndex, &*(block_.begin()));
-			IncreaseLocationReferences(vector<SECT>(1, newIndex));
+			IncreaseLocationReferences(std::vector<SECT>(1, newIndex));
 			header_._sectMiniFatStart = newIndex;
 		}
 		++header_._csectMiniFat;
@@ -1826,7 +1826,7 @@ void CompoundFile::LinkBlocks(SECT from, SECT to, bool isBig)
 		sblocksIndices_[from] = to;
 }
 
-void CompoundFile::FreeBlocks(vector<SECT>& indices, bool isBig)
+void CompoundFile::FreeBlocks(std::vector<SECT>& indices, bool isBig)
 // PURPOSE: Delete blocks of data from compound file.
 // EXPLAIN: indices contains indices to blocks of data to be deleted.
 // EXPLAIN: isBig is true if property uses big blocks, false if it uses small blocks.
@@ -1843,7 +1843,7 @@ void CompoundFile::FreeBlocks(vector<SECT>& indices, bool isBig)
 		file_.Erase(indices);
 
 		// Shrink BAT indices if necessary
-		vector<SECT> indicesToRemove;
+		std::vector<SECT> indicesToRemove;
 		while(distance(find(blocksIndices_.begin(),
 							 blocksIndices_.end(),-1), blocksIndices_.end()) >= 128)
 		{
@@ -1856,8 +1856,8 @@ void CompoundFile::FreeBlocks(vector<SECT>& indices, bool isBig)
 					header_._sectDifStart = ENDOFCHAIN;
 			} else {
 				// No XBAT, delete last occupied BAT array element
-				size_t BATindex = distance(&header_._sectFat[0],
-										   find(header_._sectFat, header_._sectFat+109, -1));
+				size_t BATindex = std::distance(&header_._sectFat[0],
+					std::find(header_._sectFat, header_._sectFat+109, -1));
 				if (BATindex != 109) {
 					--header_._csectFat;
 					indicesToRemove.push_back(header_._sectFat[BATindex-1]+1); // Add 1 because block index 1 corresponds to index 0 here
@@ -1881,7 +1881,7 @@ void CompoundFile::FreeBlocks(vector<SECT>& indices, bool isBig)
 		char* newdata = new char[dirEntries_[0]->_ulSize-maxIndices*header_.smallBlockSize_];
 		{for(size_t i=0, j=0; i<maxSmallBlocks; ++i) {
 			if (find(indices.begin(), indices.end(), i) == indices.end()) {
-				copy(data+i*header_.smallBlockSize_,
+				std::copy(data+i*header_.smallBlockSize_,
 					  data+i*header_.smallBlockSize_+header_.smallBlockSize_,
 					  newdata+j*header_.smallBlockSize_);
 				++j;
@@ -1907,13 +1907,13 @@ void CompoundFile::FreeBlocks(vector<SECT>& indices, bool isBig)
 					sblocksIndices_[j] != ENDOFCHAIN) --sblocksIndices_[j];
 			}
 		}}
-		sort (indices.begin(), indices.end(), greater<size_t>());
+		sort (indices.begin(), indices.end(), std::greater<size_t>());
 		{for(size_t i=0; i<maxIndices; ++i)
 		{
 			sblocksIndices_.erase(sblocksIndices_.begin()+indices[i]);
 			sblocksIndices_.push_back(-1);
 		}}
-		vector<SECT> indicesToRemove;
+		std::vector<SECT> indicesToRemove;
 		while(distance(find(sblocksIndices_.begin(), sblocksIndices_.end(), -1),
 							 sblocksIndices_.end()) >= 128)
 		{
@@ -2246,7 +2246,7 @@ void CompoundFile::UpdateChildrenIndices(CompoundFile::PropertyTree* parentTree)
 	size_t maxChildren = parentTree->children_.size();
 	if (maxChildren != 0)
 	{
-		vector<PropertyTree*>& children = parentTree->children_;
+		std::vector<PropertyTree*>& children = parentTree->children_;
 		size_t prevChild = 0;
 		children[0]->self_->_sidLeftSib = -1;
 		children[0]->self_->_sidRightSib = -1;
